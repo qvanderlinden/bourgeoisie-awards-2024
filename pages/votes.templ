@@ -1,0 +1,135 @@
+package pages
+
+import (
+	"fmt"
+	"encoding/json"
+
+	myClerk "github.com/bourgeoisie-awards-2024/clerk"
+	"github.com/bourgeoisie-awards-2024/components"
+	"github.com/bourgeoisie-awards-2024/models"
+)
+
+func initStore(m *models.VotesPageModel) templ.Component {
+	votes := make(map[string]string)
+	for _, category := range m.Categories {
+		if category.Vote == "" {
+			continue
+		}
+		votes[category.Id] = category.Vote
+	}
+	votesBytes, _ := json.Marshal(votes)
+	votesJson := string(votesBytes)
+
+	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
+		script := fmt.Sprintf(`
+			<script>
+				document.addEventListener('alpine:init', () => {
+					Alpine.store('votesStore', {
+							votes: %s,
+
+							getVote(categoryId) {
+								return this.votes[categoryId]
+							},
+
+							setVote(categoryId, nomineeId) {
+								this.votes[categoryId] = nomineeId
+							},
+
+							async submitVotes() {
+								await fetch('/votes', {
+									method: 'POST',
+									headers: {
+										'Content-Type': 'application/json'
+									},
+									body: JSON.stringify(this.votes)
+								})
+								window.location.assign("/thank-you")
+							}
+					})
+				})
+			</script>
+		`, votesJson)
+		_, err := io.WriteString(w, script)
+		return err
+	})
+}
+
+script submitVotes() {
+	Alpine.store('votesStore').submitVotes()
+}
+
+templ carousel(categories []*models.Category) {
+	<div
+		x-data={ fmt.Sprintf("{ index: 0, updateScroll() { $refs[`carousel-item-${this.index}`].scrollIntoView({ behavior: 'smooth' }) }, nItems: %d, previous() { this.index = Math.max(0, this.index - 1); this.updateScroll(); }, next() { this.index = Math.min(this.nItems - 1, this.index + 1); this.updateScroll(); } }", len(categories)) }
+		class="relative rounded-xl bg-slate-50 text-black w-full lg:w-[800px] p-4 flex flex-col gap-4"
+	>
+		<div class="hidden w-full h-1 lg:flex flex-row gap-2">
+			for index := range categories {
+				<div
+					x-data={ fmt.Sprintf("{ itemIndex: %d }", index) }
+					x-bind:class="{ 'h-full rounded-full flex-1': true, 'bg-gold-900': index >= itemIndex, 'bg-slate-300': index < itemIndex }"
+				></div>
+			}
+		</div>
+		<div x-ref="carousel-items" class="flex flex-row overflow-x-scroll lg:overflow-x-hidden px-14 gap-[72px] snap-x snap-mandatory">
+			for index, category := range categories {
+				<div x-ref={ fmt.Sprintf("carousel-item-%d", index) } class="relative w-full flex-grow-0 flex-shrink-0 snap-center">
+					@categoryCard(category)
+				</div>
+			}
+		</div>
+		<button
+			@click="previous()"
+			x-data="{ get disabled() { return index === 0 } }"
+			x-bind:class="{ 'hidden lg:flex absolute top-1/2 left-4 rounded-full h-10 w-10 -translate-y-1/2 justify-center items-center': true, 'bg-slate-300': disabled, 'bg-gold-900': !disabled }"
+			x-bind:disabled="disabled"
+		>
+			<img src="/static/svg/chevron-left.svg" class="h-1/2 aspect-square"/>
+		</button>
+		<button
+			@click="next()"
+			x-data="{ get disabled() { return index === nItems - 1 } }"
+			x-bind:class="{ 'hidden lg:flex absolute top-1/2 right-4 rounded-full h-10 w-10 -translate-y-1/2 justify-center items-center': true, 'bg-slate-300': disabled, 'bg-gold-900': !disabled }"
+			x-bind:disabled="disabled"
+		>
+			<img src="/static/svg/chevron-right.svg" class="h-1/2 aspect-square"/>
+		</button>
+	</div>
+}
+
+templ categoryCard(category *models.Category) {
+	<div
+		x-data={ fmt.Sprintf("{ 'categoryId': '%s' }", category.Id) }
+		class="w-full h-full flex flex-col gap-4 mb-1 justify-center items-center"
+	>
+		<h1 class="font-bold">{ category.Name }</h1>
+		<p class="text-justify">{ category.Description }</p>
+		<div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+			for _, nominee := range category.Nominees {
+				<img
+					src={ "/static/pictures/nominees/" + nominee.Name + ".jpg" }
+					x-data={ fmt.Sprintf("{ 'nomineeId': '%s' }", nominee.Id) }
+					x-bind:class="{ 'h-auto w-[250px] lg:w-[150px] rounded-full hover:cursor-pointer': true, 'outline outline-8 lg:outline-4 outline-gold-900': $store.votesStore.getVote(categoryId) === nomineeId }"
+					@click="$store.votesStore.setVote(categoryId, nomineeId)"
+				/>
+			}
+		</div>
+	</div>
+}
+
+templ votesPageContent(m *models.VotesPageModel) {
+	<div class="flex flex-col flex-1 justify-center items-center p-8 gap-8">
+		@carousel(m.Categories)
+		@components.GoldenButton("Sauver", submitVotes(), "w-[200px]")
+	</div>
+}
+
+templ VotesPage(clerkFrontendConfig *myClerk.FrontendConfig, m *models.VotesPageModel) {
+	@components.Page(clerkFrontendConfig) {
+		@initStore(m)
+		<div class="w-full h-full flex flex-col">
+			@components.Header()
+			@votesPageContent(m)
+		</div>
+	}
+}

@@ -1,0 +1,20 @@
+package components
+
+script mountUserButton() {
+  window.addEventListener("clerk-ready", () => {
+    const userButtonComponent = document.querySelector('#user-button');
+    window.Clerk.mountUserButton(userButtonComponent, { afterSignOutUrl: "/" });
+  })
+}
+
+templ Header() {
+	<div class="w-full h-12 grow-0 shrink-0 p-2 flex flex-row justify-between">
+		<a class="flex-shrink-1 flex-grow-0" href="/welcome">
+			<img src="/static/pictures/logo.jpeg" class="w-auto h-20"/>
+		</a>
+		<div>
+			<div id="user-button"></div>
+			@mountUserButton()
+		</div>
+	</div>
+}

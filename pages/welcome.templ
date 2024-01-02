@@ -1,0 +1,36 @@
+package pages
+
+import (
+	myClerk "github.com/bourgeoisie-awards-2024/clerk"
+	"github.com/bourgeoisie-awards-2024/components"
+)
+
+script goToVote() {
+	window.location.assign("/votes")
+}
+
+templ welcomePageContent() {
+	<div class="flex flex-col flex-1 justify-center items-center p-8 gap-20">
+		<p class="w-[700px] text-justify">Bonjour la Bourgeoisie, comme annoncé précédemment, voici venu le temps de clôturer cette merveilleuse année riche en souvenirs et annonces. Pour ce faire, chacun d'entre vous se verra réompensé d'un oscar. Découvrez sans plus tarder les différentes catégories !</p>
+		<div class="grid grid-cols-4 gap-4">
+			<img src="/static/pictures/nominees/Gauthier.jpg" class="rounded-full w-[160px] h-[160px]"/>
+			<img src="/static/pictures/nominees/Heloise.jpg" class="rounded-full w-[160px] h-[160px]"/>
+			<img src="/static/pictures/nominees/Lionel.jpg" class="rounded-full w-[160px] h-[160px]"/>
+			<img src="/static/pictures/nominees/Maxime.jpg" class="rounded-full w-[160px] h-[160px]"/>
+			<img src="/static/pictures/nominees/Manon.jpg" class="rounded-full w-[160px] h-[160px]"/>
+			<img src="/static/pictures/nominees/Marine.jpg" class="rounded-full w-[160px] h-[160px]"/>
+			<img src="/static/pictures/nominees/Quentin.jpg" class="rounded-full w-[160px] h-[160px]"/>
+			<img src="/static/pictures/nominees/Zarina.jpg" class="rounded-full w-[160px] h-[160px]"/>
+		</div>
+		@components.GoldenButton("Passer aux votes", goToVote(), "")
+	</div>
+}
+
+templ WelcomePage(clerkFrontendConfig *myClerk.FrontendConfig) {
+	@components.Page(clerkFrontendConfig) {
+		<div class="w-full h-full flex flex-col">
+			@components.Header()
+			@welcomePageContent()
+		</div>
+	}
+}

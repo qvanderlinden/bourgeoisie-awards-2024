@@ -1,0 +1,47 @@
+package components
+
+import (
+	"fmt"
+	"github.com/bourgeoisie-awards-2024/clerk"
+)
+
+func loadClerkScript(clerkFrontendConfig *clerk.FrontendConfig) templ.Component {
+	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
+		if clerkFrontendConfig == nil {
+			return nil
+		}
+
+		script := fmt.Sprintf(`<script>
+        const script = document.createElement('script');
+        script.setAttribute('data-clerk-frontend-api', "%[1]s");
+        script.setAttribute('data-clerk-publishable-key', "%[2]s");
+        script.async = true;
+        script.src = "%[1]s/npm/@clerk/clerk-js%[3]s/dist/clerk.browser.js";
+        script.addEventListener('load', async function () {
+          await window.Clerk.load();
+					window.dispatchEvent(new Event("clerk-ready"));
+        });
+        document.body.appendChild(script);
+      </script>`, clerkFrontendConfig.FrontendAPI, clerkFrontendConfig.PublishableKey, clerkFrontendConfig.Version)
+		_, err := io.WriteString(w, script)
+
+		return err
+	})
+}
+
+templ Page(clerkFrontendConfig *clerk.FrontendConfig) {
+	<!DOCTYPE html>
+	<html>
+		<head>
+			<title>Bourgeoisie Awards 2024</title>
+			<link href="/static/css/styles.css" rel="stylesheet"/>
+			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+		</head>
+		<body class="w-dvw h-dvh text-white bg-black text-4xl lg:text-xl">
+			@loadClerkScript(clerkFrontendConfig)
+			<div id="page-container" class="w-full h-full">
+				{ children... }
+			</div>
+		</body>
+	</html>
+}

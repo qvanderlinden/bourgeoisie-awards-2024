@@ -1,0 +1,23 @@
+package pages
+
+import (
+	myClerk "github.com/bourgeoisie-awards-2024/clerk"
+	"github.com/bourgeoisie-awards-2024/components"
+)
+
+templ thankYouPageContent() {
+	<div class="flex flex-col flex-1 justify-center items-center p-8 gap-10">
+		<img src="/static/pictures/logo.jpeg" class="w-auto h-[400px]"/>
+		<h1 class="mb-10">Merci pour vos votes !</h1>
+		@components.GoldenButton("Modifier mes votes", goToVote(), "")
+	</div>
+}
+
+templ ThankYouPage(clerkFrontendConfig *myClerk.FrontendConfig) {
+	@components.Page(clerkFrontendConfig) {
+		<div class="w-full h-full flex flex-col">
+			@components.Header()
+			@thankYouPageContent()
+		</div>
+	}
+}

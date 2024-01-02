@@ -1,0 +1,32 @@
+# fly.toml app configuration file generated for bourgeoisie-oscars-2024 on 2023-12-31T01:10:53+01:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = "bourgeoisie-oscars-2024"
+primary_region = "ams"
+
+[build]
+  builder = "paketobuildpacks/builder:base"
+  buildpacks = ["gcr.io/paketo-buildpacks/go"]
+  [build.args]
+    BP_KEEP_FILES = "static/*"
+
+[env]
+  PORT = "8080"
+  CLERK_PUBLISHABLE_KEY = "pk_test_Y29udGVudC1sYWR5YmlyZC0xMi5jbGVyay5hY2NvdW50cy5kZXYk"
+  CLERK_FRONTEND_API = "https://content-ladybird-12.clerk.accounts.dev"
+  CLERK_VERSION = "@latest"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 256

@@ -1,0 +1,7 @@
+package components
+
+templ GoldenButton(text string, onclick templ.ComponentScript, class string) {
+	<button onclick={ onclick } class={ "rounded-full text-black font-bold p-4 bg-gradient-to-r from-gold-900 to-gold-600" + " " + class }>
+		{ text }
+	</button>
+}
